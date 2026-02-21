@@ -4,7 +4,7 @@ import lal
 
 
 #Dephasing (Eqn 5.12 - 5.20 of arXiv: 2212.13095) -----------
-def psiTH_new(f,mass_1,mass_2,spin1z,spin2z):
+def psiTH_new(f,mass_1,mass_2,chi_1,chi_2):
 
     # Polygamma function with n=0 (digamma) -------
     def B2(x,y):
@@ -15,14 +15,14 @@ def psiTH_new(f,mass_1,mass_2,spin1z,spin2z):
     mass_1, mass_2 = mass_1*lal.MTSUN_SI, mass_2*lal.MTSUN_SI
     eta = (mass_1*mass_2)/(mass_1+mass_2)**2
     delta = (mass_1-mass_2)/(mass_1+mass_2)
-    chi_s = (spin1z+spin2z)/2.
-    chi_a = (spin1z-spin2z)/2.
-    k1 = np.sqrt(1.-spin1z**2)
-    k2 = np.sqrt(1.-spin2z**2)
+    chi_s = (chi_1+chi_2)/2.
+    chi_a = (chi_1-chi_2)/2.
+    k1 = np.sqrt(1.-chi_1**2)
+    k2 = np.sqrt(1.-chi_2**2)
     k_s = (k1+k2)/2.
     k_a = (k1-k2)/2.
-    B21 = B2(3,2*spin1z/k1)
-    B22 = B2(3,2*spin2z/k2)
+    B21 = B2(3,2*chi_1/k1)
+    B22 = B2(3,2*chi_2/k2)
     B2_s = (B21+B22)/2.
     B2_a = (B21-B22)/2.
     v = (np.pi*(mass_1+mass_2)*f)**(1./3.)
@@ -53,7 +53,7 @@ def psiTH_new(f,mass_1,mass_2,spin1z,spin2z):
 #-------------- ISCO for KBH -------------- (arXiv: 2108.05861)
 
 
-def f_isco_Msolar_KBH(mass_1,mass_2,spin1zz,spin2zz):
+def f_isco_Msolar_KBH(mass_1,mass_2,chi_1z,chi_2z):
     
     def r_hat_isco(chi):
         z1 = 1 + (1 - chi**2)**(1./3.)*((1 + chi)**(1./3.) + (1 - chi)**(1./3.))
@@ -77,12 +77,12 @@ def f_isco_Msolar_KBH(mass_1,mass_2,spin1zz,spin2zz):
     M = mass_1 + mass_2 # initial total mass
     eta = (mass_1*mass_2)/(mass_1 + mass_2)**2
 
-    S_hat = (spin1zz*mass_1**2 + spin2zz*mass_2**2)/(M**2*(1 - 2*eta))
+    S_hat = (chi_1z*mass_1**2 + chi_2z*mass_2**2)/(M**2*(1 - 2*eta))
     Erad_by_M = (0.0559745*eta + 0.580951*eta**2 - 0.960673*eta**3 + 3.35241*eta**4)\
              *((1 + S_hat*(-0.00303023 - 2.00661*eta + 7.70506*eta**2))/(1 + S_hat*(-0.067144 - 1.47569*eta + 7.30468*eta**2)))
     M_f = M*(1 - Erad_by_M)  # mass of the final black hole
-    a_tot = (spin1zz*mass_1**2 + spin2zz*mass_2**2)/(mass_1 + mass_2)**2
-    a_eff = a_tot + zeta*eta*(spin1zz + spin2zz)
+    a_tot = (chi_1z*mass_1**2 + chi_2z*mass_2**2)/(mass_1 + mass_2)**2
+    a_eff = a_tot + zeta*eta*(chi_1z + chi_2z)
     chi_f = a_tot + eta*(L_hat_isco(a_eff) - 2*a_tot*(E_hat_isco(a_eff) - 1))\
           + (k00 + k01*a_eff + k02*a_eff**2)*eta**2 + (k10 + k11*a_eff + k12*a_eff**2)*eta**3  # final spin of the KBH
     
@@ -93,7 +93,7 @@ def f_isco_Msolar_KBH(mass_1,mass_2,spin1zz,spin2zz):
 
 ## Source model for bnary compact objects with arbitrary tidal heating 
 ####################################################################################
-def binary_compact_object(frequency_array,mass_1,mass_2,spin1z,spin2z,luminosity_distance,
+def binary_compact_object(frequency_array,mass_1,mass_2,chi_1,chi_2,luminosity_distance,
                           theta_jn,dH,**kwargs):
     """_summary_
 
@@ -101,8 +101,8 @@ def binary_compact_object(frequency_array,mass_1,mass_2,spin1z,spin2z,luminosity
         frequency_array (array_like): frequency array
         mass_1 (float): mass of the first compact object in solar masses
         mass_2 (float): mass of the second compact object in solar masses
-        spin1z (float): dimensionless spin of the first compact object
-        spin2z (float): dimensionless spin of the second compact object
+        chi_1 (float): dimensionless spin of the first compact object
+        chi_2 (float): dimensionless spin of the second compact object
         luminosity_distance (float): luminosity distance in Mpc
         theta_jn (float): inclination angle in radians
         dH (float): tidal heating parameter [H = (1 + dH)]
@@ -112,7 +112,7 @@ def binary_compact_object(frequency_array,mass_1,mass_2,spin1z,spin2z,luminosity
     Returns:
         dict: dictionary containing the waveform data
     """
-    maximum_frequency = f_isco_Msolar_KBH(mass_1, mass_2, spin1z, spin2z)
+    maximum_frequency = f_isco_Msolar_KBH(mass_1, mass_2, chi_1, chi_2)
     waveform_kwargs = dict(minimum_frequency=20.0, maximum_frequency=maximum_frequency)
     waveform_kwargs.update(kwargs)
 
@@ -121,7 +121,7 @@ def binary_compact_object(frequency_array,mass_1,mass_2,spin1z,spin2z,luminosity
     
     hp, hc = binary_compact_object_waveform(frequency_array=frequency_array, 
                                             mass_1=mass_1, mass_2=mass_2, 
-                                            spin1z=spin1z, spin2z=spin2z, luminosity_distance=luminosity_distance, 
+                                            chi_1=chi_1, chi_2=chi_2, luminosity_distance=luminosity_distance, 
                                             theta_jn=theta_jn, 
                                             dH=dH)
     hp *= frequency_bounds
@@ -136,7 +136,7 @@ def binary_compact_object(frequency_array,mass_1,mass_2,spin1z,spin2z,luminosity
 
 def binary_compact_object_waveform(frequency_array,
                         mass_1=10., mass_2=10., 
-                        spin1z=0., spin2z=0., 
+                        chi_1=0., chi_2=0., 
                         luminosity_distance=200., theta_jn=0.,
                         dH=0.):
     """_summary_
@@ -145,8 +145,8 @@ def binary_compact_object_waveform(frequency_array,
         f (array_like): frequency array
         mass_1 (float, optional): Mass of the first compact object in solar masses. Defaults to 10..
         mass_2 (float, optional): Mass of the second compact object in solar masses. Defaults to 10..
-        spin1z (float, optional): Dimensionless spin of the first compact object. Defaults to 0..
-        spin2z (float, optional): Dimensionless spin of the second compact object. Defaults to 0..
+        chi_1 (float, optional): Dimensionless spin of the first compact object. Defaults to 0..
+        chi_2 (float, optional): Dimensionless spin of the second compact object. Defaults to 0..
         luminosity_distance (float, optional): Luminosity distance in Mpc. Defaults to 200..
         tc (float, optional): Coalescence time in seconds. Defaults to 0..
         phic (float, optional): Coalescence phase in radians. Defaults to 0..
@@ -171,8 +171,8 @@ def binary_compact_object_waveform(frequency_array,
     DLt = luminosity_distance * 1e6 * lal.PC_SI / lal.C_SI
 
     # get sym and asym chi combinations
-    chi_s = 0.5*(spin1z+spin2z)
-    chi_a = 0.5*(spin1z-spin2z)
+    chi_s = 0.5*(chi_1+chi_2)
+    chi_a = 0.5*(chi_1-chi_2)
 
     '''
     Mc is in sec, e.g., Mc = 10*MTSUN_SI (for 10 solar mass)
@@ -263,7 +263,7 @@ def binary_compact_object_waveform(frequency_array,
     phase = (3./(128.*v**5*eta))*(p0 + v*p1 + v**2*p2 + v**3*p3+ v**4*p4 + v**5*(p5+p5L) + v**6*(p6+p6L) + v**7*p7 + v**8*p8L + v**9*p9)
     #-----------------------------------------------------------------------------------------------------
     # Add tidal heating contribution to the phase
-    phase += (1. + dH) * psiTH_new(frequency_array,mass_1,mass_2,spin1z,spin2z)
+    phase += (1. + dH) * psiTH_new(frequency_array,mass_1,mass_2,chi_1,chi_2)
     #-----------------------------------------------------------------------------------------------------   
     
     hp = 0.5*(1+(cos(theta_jn))**2)*amp*(cos(phase) - 1j*sin(phase))
