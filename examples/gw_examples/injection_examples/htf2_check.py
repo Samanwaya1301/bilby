@@ -14,7 +14,7 @@ import bilby
 # going to inject the signal into
 duration = 4.0
 sampling_frequency = 2048.0
-minimum_frequency = 20
+minimum_frequency = 20.
 
 # Specify the output directory and the name of the simulation.
 outdir = "outdir_htf2_check"
@@ -31,8 +31,8 @@ bilby.core.utils.random.seed(88170235)
 injection_parameters = dict(
     mass_1=36.0,
     mass_2=29.0,
-    spin1z=0.4,
-    spin2z=0.3,
+    chi_1=0.4,
+    chi_2=0.3,
     luminosity_distance=500.,
     theta_jn=0.,
     dH=0.,
@@ -81,10 +81,10 @@ ifos.inject_signal(
 # distance, which means those are the parameters that will be included in the
 # sampler.  If we do nothing, then the default priors get used.
 # priors = bilby.core.prior.PriorDict('/home/samanwaya/bilby/bilby/gw/prior_files/aligned_spins_bco.prior')
-priors = bilby.gw.prior.BBHPriorDict(filename='/home/samanwaya.mukherjee/bilby-tidal/bilby/bilby/gw/prior_files/aligned_spins_bco.prior')
+priors = bilby.gw.prior.BCOPriorDict()
 for key in [
-    "spin1z",
-    "spin2z",
+    "chi_1",
+    "chi_2",
     "ra",
     "dec",
     "geocent_time",
@@ -107,12 +107,17 @@ result = bilby.run_sampler(
     likelihood=likelihood,
     priors=priors,
     sampler="dynesty",
-    npoints=50,
+    npoints=50, # Kept small for a quick check. Take at least = 500 for a good posterior.
     injection_parameters=injection_parameters,
     outdir=outdir,
     label=label,
     result_class=bilby.gw.result.CBCResult,
 )
 
+truth_dict = bilby.core.utils.build_truth_dict(result)
+
 # Make a corner plot.
-result.plot_corner()
+result.plot_corner(parameters=list(truth_dict.keys()),
+                   truths=list(truth_dict.values()),
+                   truth_color='darkred',
+                  )
