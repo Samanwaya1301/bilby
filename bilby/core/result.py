@@ -1145,6 +1145,7 @@ class Result(object):
         else:
             return fig
 
+    
     def plot_marginals(self, parameters=None, priors=None, titles=True,
                        file_base_name=None, bins=50, label_fontsize=16,
                        title_fontsize=16, quantiles=(0.16, 0.84), dpi=300,
@@ -1337,7 +1338,6 @@ class Result(object):
                 key: self.injection_parameters.get(key, np.nan)
                 for key in self.search_parameter_keys
             }
-
         # If parameters is a dictionary, use the keys to determine which
         # parameters to plot and the values as truths.
         if isinstance(parameters, dict):
@@ -1408,6 +1408,32 @@ class Result(object):
         else: plt.close(fig)
         
         return fig
+
+    ##################################################################
+    @latex_plot_format
+    def plot_corner_converted(self, parameters=None, priors=None, titles=True, save=True,
+                    filename=None, dpi=300, **kwargs):
+        
+        import corner
+        import matplotlib.pyplot as plt
+        from ..gw.conversion import convert_to_binary_compact_object_parameters
+        
+        cond1 = getattr(self, 'injection_parameters', None) is not None
+        if cond1:
+            inj_parameters = self.injection_parameters
+            search_parameter_keys = self.search_parameter_keys
+            if not all(k in inj_parameters for k in search_parameter_keys):
+                all_parameters,_ = convert_to_binary_compact_object_parameters(inj_parameters)
+                plot_parameters = {k:all_parameters.get(k) for k in search_parameter_keys}
+                parameters = plot_parameters
+        
+        kwargs['color'] = 'green'
+        kwargs['truth_color'] = 'darkred'
+        
+        return self.plot_corner(parameters=parameters,priors=priors,
+                                       save=save,filename=filename,dpi=dpi, **kwargs)
+        
+    #################################################################   
 
     @latex_plot_format
     def plot_walkers(self, **kwargs):
