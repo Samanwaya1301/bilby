@@ -282,6 +282,44 @@ def convert_to_lal_binary_black_hole_parameters(parameters):
     return converted_parameters, added_keys
 
 
+def convert_to_binary_compact_object_parameters(parameters, dH_to_H=False):
+    """
+    Convert parameters we have into parameters we need.
+
+    This is defined by the parameters of bilby.source.lal_binary_compact_object()
+
+    Mass: mass_1, mass_2, chirp_mass, mass_ratio, symmetric_mass_ratio, total_mass
+    Spin: a_1, a_2, tilt_1, tilt_2, phi_12, phi_jl
+    Extrinsic: luminosity_distance, theta_jn, phase, ra, dec, geocent_time, psi
+    Horizon parameter: H or dH
+
+    This involves popping a lot of things from parameters.
+    The keys in added_keys should be popped after evaluating the waveform.
+
+    Parameters
+    ==========
+    parameters: dict
+        dictionary of parameter values to convert into the required parameters
+
+    Returns
+    =======
+    converted_parameters: dict
+        dict of the required parameters
+    added_keys: list
+        keys which are added to parameters during function call
+    """
+    original_keys = list(parameters.keys())
+    converted_parameters,_ = convert_to_lal_binary_black_hole_parameters(parameters)
+    converted_parameters = generate_mass_parameters(converted_parameters)
+    if dH_to_H: 
+        converted_parameters["H"] = 1. + converted_parameters.pop("dH")
+
+    added_keys = [key for key in converted_parameters.keys()
+                  if key not in original_keys]
+
+    return converted_parameters, added_keys
+
+
 def convert_to_lal_binary_neutron_star_parameters(parameters):
     """
     Convert parameters we have into parameters we need.
