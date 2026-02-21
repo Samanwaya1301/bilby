@@ -1262,7 +1262,7 @@ class Result(object):
             python module, see https://corner.readthedocs.io for more
             information.
 
-            Truth-lines can be passed in in several ways. Either as the values
+            Truth-lines can be passed in several ways. Either as the values
             of the parameters dict, or a list via the `truths` kwarg. If
             injection_parameters where given to run_sampler, these will auto-
             matically be added to the plot. This behaviour can be stopped by
@@ -1405,7 +1405,8 @@ class Result(object):
             logger.debug('Saving corner plot to {}'.format(filename))
             safe_save_figure(fig=fig, filename=filename, dpi=dpi)
             plt.close(fig)
-
+        else: plt.close(fig)
+        
         return fig
 
     @latex_plot_format
