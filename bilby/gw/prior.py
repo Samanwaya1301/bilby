@@ -1049,6 +1049,59 @@ class BBHPriorDict(CBCPriorDict):
         return False
 
 
+class BCOPriorDict(CBCPriorDict):
+
+    def __init__(self, dictionary=None, filename=None, aligned_spin=True,
+                 conversion_function=None):
+
+        if aligned_spin:
+            default_file = 'aligned_spins_bco.prior'
+        else:
+            default_file = 'precessing_spins_bco.prior'
+        if dictionary is None and filename is None:
+            filename = os.path.join(DEFAULT_PRIOR_DIR,
+                                     default_file)
+
+        super().__init__(
+            dictionary=dictionary,
+            filename=filename,
+            conversion_function=conversion_function
+        )
+
+    def default_conversion_function(self, sample):
+
+        out_sample = fill_from_fixed_priors(sample, self)
+
+        # Adapt conversion pipeline if needed
+        out_sample = generate_mass_parameters(out_sample)
+
+        if "dH" not in out_sample:
+            out_sample["dH"] = 0.0
+
+        return out_sample
+
+    def test_redundancy(self, key, disable_logging=False):
+
+        if BBHPriorDict(self).test_redundancy(key):
+            return True
+
+        sampling_parameters = {
+            k for k in self
+            if not isinstance(self[k], (DeltaFunction, Constraint))
+        }
+
+        horizon_parameters = {"dH"}
+
+        if key in horizon_parameters:
+            if len(horizon_parameters.intersection(sampling_parameters)) >= 1:
+                logger.warning(
+                    f"{horizon_parameters.intersection(self)} already in prior."
+                )
+                return True
+
+        return False
+
+        
 class BNSPriorDict(CBCPriorDict):
 
     def __init__(self, dictionary=None, filename=None, aligned_spin=True,
@@ -1178,6 +1231,7 @@ Prior._default_latex_labels = {
     'chi_2': r'$\chi_2$',
     'chi_1_in_plane': r'$\chi_{1, \perp}$',
     'chi_2_in_plane': r'$\chi_{2, \perp}$',
+    'dH' : r'$\delta H$'
 }
 
 
