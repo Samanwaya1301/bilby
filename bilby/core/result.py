@@ -1418,13 +1418,15 @@ class Result(object):
         from ..gw.conversion import convert_to_binary_compact_object_parameters
         
         cond1 = getattr(self, 'injection_parameters', None) is not None
-        if cond1:
+        cond2 = parameters is None        
+        if cond1 and cond2:
             inj_parameters = self.injection_parameters
             search_parameter_keys = self.search_parameter_keys
             if not all(k in inj_parameters for k in search_parameter_keys):
                 all_parameters,_ = convert_to_binary_compact_object_parameters(inj_parameters)
                 plot_parameters = {k:all_parameters.get(k) for k in search_parameter_keys}
                 parameters = plot_parameters
+            else: parameters = {k:self.injection_parameters[k] for k in self.search_parameter_keys}
         
         kwargs['color'] = 'green'
         kwargs['truth_color'] = 'darkred'
@@ -1432,20 +1434,18 @@ class Result(object):
         fig = self.plot_corner(parameters=parameters,priors=priors,
                                        save=save,filename=filename,dpi=dpi, **kwargs)
         
-        cond2 = parameters is not None        
-        if suptitle and cond1 and cond2:
+        if suptitle and cond1:
             text = "\n".join(f"{k} = {v:.3f}" if v is not None else f"{k} = None"
                                 for k, v in parameters.items()
                             )
-            
             fig.text(
-                0.8, 0.95,
-                text,
-                ha="right",
-                va="top",
-                fontsize=sup_fontsize,
-                )
-        
+            0.8, 0.95,
+            text,
+            ha="right",
+            va="top",
+            fontsize=sup_fontsize,
+            )
+    
         return fig
             
         
