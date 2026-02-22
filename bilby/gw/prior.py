@@ -15,6 +15,7 @@ from ..core.prior import (
 )
 from ..core.utils import infer_args_from_method, logger, random, WrappedInterp1d as interp1d
 from .conversion import (
+    convert_to_binary_compact_object_parameters,
     convert_to_lal_binary_black_hole_parameters,
     convert_to_lal_binary_neutron_star_parameters, generate_mass_parameters,
     generate_tidal_parameters, fill_from_fixed_priors,
@@ -1062,7 +1063,7 @@ class BCOPriorDict(CBCPriorDict):
             filename = os.path.join(DEFAULT_PRIOR_DIR,
                                      default_file)
 
-        super().__init__(
+        super(BCOPriorDict, self).__init__(
             dictionary=dictionary,
             filename=filename,
             conversion_function=conversion_function
@@ -1071,12 +1072,8 @@ class BCOPriorDict(CBCPriorDict):
     def default_conversion_function(self, sample):
 
         out_sample = fill_from_fixed_priors(sample, self)
-
-        # Adapt conversion pipeline if needed
+        out_sample, _ = convert_to_binary_compact_object_parameters(out_sample)
         out_sample = generate_mass_parameters(out_sample)
-
-        if "dH" not in out_sample:
-            out_sample["dH"] = 0.0
 
         return out_sample
 
@@ -1094,9 +1091,11 @@ class BCOPriorDict(CBCPriorDict):
 
         if key in horizon_parameters:
             if len(horizon_parameters.intersection(sampling_parameters)) >= 1:
+                logger.disabled = disable_logging
                 logger.warning(
                     f"{horizon_parameters.intersection(self)} already in prior."
                 )
+                logger.disabled = False
                 return True
 
         return False

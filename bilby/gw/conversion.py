@@ -311,6 +311,11 @@ def convert_to_binary_compact_object_parameters(parameters, dH_to_H=False):
     original_keys = list(parameters.keys())
     converted_parameters,_ = convert_to_lal_binary_black_hole_parameters(parameters)
     converted_parameters = generate_mass_parameters(converted_parameters)
+    
+    if not any([key in converted_parameters for key in
+                ['H', 'dH']]):
+        converted_parameters['dH'] = -1.
+    
     if dH_to_H: 
         converted_parameters["H"] = 1. + converted_parameters.pop("dH")
 

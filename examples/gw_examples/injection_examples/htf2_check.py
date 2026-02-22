@@ -114,10 +114,6 @@ result = bilby.run_sampler(
     result_class=bilby.gw.result.CBCResult,
 )
 
-truth_dict = bilby.core.utils.build_truth_dict(result)
 
 # Make a corner plot.
-result.plot_corner(parameters=list(truth_dict.keys()),
-                   truths=list(truth_dict.values()),
-                   truth_color='darkred',
-                  )
+result.plot_corner_converted()
