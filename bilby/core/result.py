@@ -1405,14 +1405,13 @@ class Result(object):
             logger.debug('Saving corner plot to {}'.format(filename))
             safe_save_figure(fig=fig, filename=filename, dpi=dpi)
             plt.close(fig)
-        else: plt.close(fig)
         
         return fig
 
     ##################################################################
     @latex_plot_format
     def plot_corner_converted(self, parameters=None, priors=None, titles=True, save=True,
-                    filename=None, dpi=300, **kwargs):
+                    filename=None, dpi=300, suptitle=False, sup_fontsize=15, **kwargs):
         
         import corner
         import matplotlib.pyplot as plt
@@ -1430,8 +1429,25 @@ class Result(object):
         kwargs['color'] = 'green'
         kwargs['truth_color'] = 'darkred'
         
-        return self.plot_corner(parameters=parameters,priors=priors,
+        fig = self.plot_corner(parameters=parameters,priors=priors,
                                        save=save,filename=filename,dpi=dpi, **kwargs)
+        
+        cond2 = parameters is not None        
+        if suptitle and cond1 and cond2:
+            text = "\n".join(f"{k} = {v:.3f}" if v is not None else f"{k} = None"
+                                for k, v in parameters.items()
+                            )
+            
+            fig.text(
+                0.8, 0.95,
+                text,
+                ha="right",
+                va="top",
+                fontsize=sup_fontsize,
+                )
+        
+        return fig
+            
         
     #################################################################   
 
