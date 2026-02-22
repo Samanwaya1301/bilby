@@ -16,8 +16,24 @@ duration = 4.0
 sampling_frequency = 2048.0
 minimum_frequency = 20.
 
+import os
+
+def get_unique_dir(path):
+    if not os.path.exists(path):
+        return path
+
+    i = 1
+    new_path = f"{path}_{i}"
+
+    while os.path.exists(new_path):
+        i += 1
+        new_path = f"{path}_{i}"
+
+    return new_path
+
+
 # Specify the output directory and the name of the simulation.
-outdir = "outdir_htf2_check"
+outdir = get_unique_dir("/home/samanwaya/bilby_tidal_codes/outdir_htf2_check")
 label = "fast_tutorial"
 bilby.core.utils.setup_logger(outdir=outdir, label=label, log_level="DEBUG")
 
@@ -29,8 +45,10 @@ bilby.core.utils.random.seed(88170235)
 # parameters, including masses of the two black holes (mass_1, mass_2),
 # spins of both black holes (a, tilt, phi), etc.
 injection_parameters = dict(
-    mass_1=36.0,
-    mass_2=29.0,
+    total_mass=65.0,
+    mass_ratio=29./36.,
+    # mass_1=36.0,
+    # mass_2=29.0,
     chi_1=0.4,
     chi_2=0.3,
     luminosity_distance=500.,
@@ -54,6 +72,7 @@ waveform_generator = bilby.gw.waveform_generator.WaveformGenerator(
     duration=duration,
     sampling_frequency=sampling_frequency,
     frequency_domain_source_model=bilby.gw.source_tidalheating.binary_compact_object,
+    parameter_conversion=bilby.gw.conversion.convert_to_binary_compact_object_parameters,
     waveform_arguments=waveform_arguments,
 )
 
