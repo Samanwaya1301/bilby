@@ -1411,7 +1411,7 @@ class Result(object):
     ##################################################################
     @latex_plot_format
     def plot_corner_converted(self, parameters=None, priors=None, titles=True, save=True,
-                    filename=None, dpi=300, suptitle=False, sup_fontsize=15, **kwargs):
+                    filename=None, dpi=300, **kwargs):
         
         import corner
         import matplotlib.pyplot as plt
@@ -1430,22 +1430,10 @@ class Result(object):
         
         kwargs['color'] = 'green'
         kwargs['truth_color'] = 'darkred'
-        
-        fig = self.plot_corner(parameters=parameters,priors=priors,
+
+        fig = self.plot_corner(parameters=parameters,priors=priors, titles=titles,
                                        save=save,filename=filename,dpi=dpi, **kwargs)
         
-        if suptitle and cond1:
-            text = "\n".join(f"{k} = {v:.3f}" if v is not None else f"{k} = None"
-                                for k, v in parameters.items()
-                            )
-            fig.text(
-            0.8, 0.95,
-            text,
-            ha="right",
-            va="top",
-            fontsize=sup_fontsize,
-            )
-    
         return fig
             
         
