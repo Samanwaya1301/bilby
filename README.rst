@@ -48,9 +48,8 @@ Please refer to the `Acknowledging/citing bilby guide <https://bilby-dev.github.
 Instructions to use the tidalheating branch
 -------------------------------------------
 
-~~~~~~~~~
 Local installation
-~~~~~~~~
+~~~~~~~~~~~~~~~~~~
 
 1. First, create and activate a conda environment (you can choose any name in place of "bilby-tidal"):
 
@@ -99,20 +98,18 @@ Local installation
    Each of these options has its pros and cons, and the user should make the choice considering their use case.
 
 
-~~~~~~~~~~
 Installation in clusters
-~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~
 
+For cluster installation, *editable install is not recommended* as running jobs may take several days and results may be inconsistent if source code is changed during that period.
 
-For cluster installation, **editable install is not recommended** as running jobs may take several days and results may be inconsistent if source code is changed during that period.
+If the cluster is equipped with IGWN conda distributions and you choose to use that, you may create conda environment with 
 
-If the cluster is equipped with IGWN conda distributions and you choose to use that, create conda environment with
-
-   ``conda create -n bilby-tidal --clone igwn-py310``
+``conda create -n bilby-tidal --clone igwn-py310``
 
 and install the repo by cloning and activating the tidalheating branch. This will override the already existing Bilby installation in the IGWN clone.
 
-If you don't clone IGWN environment and follow the above steps for a minimal installation in cluster, you may want to also install bilby_pipe for job submission:
+If you don't clone IGWN environment and follow the above steps for a minimal installation in cluster, you may want to also install bilby_pipe for job submission: 
 
-   ``conda install -c conda-forge bilby_pipe``
+``conda install -c conda-forge bilby_pipe``
 
