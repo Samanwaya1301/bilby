@@ -75,7 +75,7 @@ Local installation
 
    ``git clone git@github.com:Samanwaya1301/bilby.git``
 
-4. Enter and switch to tidalheating branch:
+4. Enter and switch to the tidalheating branch:
 
    ``cd bilby``
 
@@ -91,7 +91,7 @@ Local installation
 
    ``pip install -e .``
 
-   With a normal installation instead, the package has to be reinstalled every time a source code change is expected to show up in outputs. For this, run (and run this after every change): 
+   With a normal installation instead, the package has to be reinstalled every time a source code change is expected to show up in the outputs. For this, run (and run this after every change): 
 
    ``pip install .``
 
@@ -101,15 +101,15 @@ Local installation
 Installation in clusters
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
-For cluster installation, *editable install is not recommended* as running jobs may take several days and results may be inconsistent if source code is changed during that period.
+For a cluster installation, *editable install is not recommended* as running jobs may take several days and the results may be inconsistent if the source code is changed during that period.
 
-If the cluster is equipped with IGWN conda distributions and you choose to use that, you may create conda environment with 
+If the cluster is equipped with IGWN conda distributions and you choose to use that, you may create a conda environment with 
 
 ``conda create -n bilby-tidal --clone igwn-py310``
 
 and install the repo by cloning and activating the tidalheating branch. This will override the already existing Bilby installation in the IGWN clone.
 
-If you don't clone IGWN environment and follow the above steps for a minimal installation in cluster, you may want to also install bilby_pipe for job submission: 
+If you don't clone IGWN environment and follow the above steps for a minimal installation in the cluster, you may want to also install `bilby_pipe <https://lscsoft.docs.ligo.org/bilby_pipe/0.3.12/index.html>`_ for job submissions: 
 
 ``conda install -c conda-forge bilby_pipe``
 
