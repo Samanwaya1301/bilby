@@ -42,3 +42,77 @@ Please refer to the `Acknowledging/citing bilby guide <https://bilby-dev.github.
    :target: https://anaconda.org/conda-forge/bilby
 .. |version| image:: https://img.shields.io/pypi/pyversions/bilby.svg
    :target: https://pypi.org/project/bilby/
+
+
+-------------------------------------------
+Instructions to use the tidalheating branch
+-------------------------------------------
+
+~~~~~~~~~
+Local installation
+~~~~~~~~
+
+1. First, create and activate a conda environment (you can choose any name in place of "bilby-tidal"):
+
+   ``conda create -n bilby-tidal python=3.10``
+
+   ``conda activate bilby-tidal``
+
+2. Install numpy<1.25, scipy<1.11 and contourpy<1.2 beforehand. At present more recent versions create conflicts. The order of installation of these packages is important.
+
+   ``pip install "numpy<1.25"``
+
+   ``pip install "scipy<1.11"``
+
+   ``pip install "contourpy<1.2"``
+
+3. Clone the repo: 
+   
+   via https (works without ssh keys)
+
+   ``git clone https://github.com/Samanwaya1301/bilby.git`` 
+   
+   or via SSH 
+
+   ``git clone git@github.com:Samanwaya1301/bilby.git``
+
+4. Enter and switch to tidalheating branch:
+
+   ``cd bilby``
+
+   ``git switch tidalheating``
+
+5. Install dependencies:
+
+   ``pip install -r requirements.txt``
+
+   ``pip install -r gw_requirements.txt``
+
+6. If you go for an editable install of bilby, you won't have to install the package evry time you make any change in the source repo. The package will be loaded directly from the source. For this, run:
+
+   ``pip install -e .``
+
+   With a normal installation instead, the package has to be installed every time a source code change is expected to show up in outputs. For this, run (and run this after every change): 
+
+   ``pip install .``
+
+   Each of these options has its pros and cons, and the user should make the choice considering their use case.
+
+
+~~~~~~~~~~
+Installation in clusters
+~~~~~~~~~
+
+
+For cluster installation, **editable install is not recommended** as running jobs may take several days and results may be inconsistent if source code is changed during that period.
+
+If the cluster is equipped with IGWN conda distributions and you choose to use that, create conda environment with
+
+   ``conda create -n bilby-tidal --clone igwn-py310``
+
+and install the repo by cloning and activating the tidalheating branch. This will override the already existing Bilby installation in the IGWN clone.
+
+If you don't clone IGWN environment and follow the above steps for a minimal installation in cluster, you may want to also install bilby_pipe for job submission:
+
+   ``conda install -c conda-forge bilby_pipe``
+
