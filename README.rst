@@ -91,7 +91,7 @@ Local installation
 
    ``pip install -e .``
 
-   With a normal installation instead, the package has to be installed every time a source code change is expected to show up in outputs. For this, run (and run this after every change): 
+   With a normal installation instead, the package has to be reinstalled every time a source code change is expected to show up in outputs. For this, run (and run this after every change): 
 
    ``pip install .``
 
