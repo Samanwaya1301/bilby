@@ -2,6 +2,8 @@ import numpy as np
 from scipy.special import psi as digamma
 import lal
 
+from .source import _base_lal_cbc_fd_waveform
+
 
 #Dephasing (Eqn 5.12 - 5.20 of arXiv: 2212.13095) -----------
 def psiTH_new(f,mass_1,mass_2,chi_1,chi_2):
@@ -102,6 +104,7 @@ def binary_compact_object(
                         chi_2,
                         luminosity_distance,
                         theta_jn,
+                        phase,
                         dH,
                         **kwargs,
                     ):
@@ -117,8 +120,15 @@ def binary_compact_object(
         theta_jn (float): inclination angle in radians
         dH (float): tidal heating parameter [H = (1 + dH)]
                     (0 for black holes, -1 for neutron stars/perfectly reflecting compact objects)
-        **waveform_kwargs: additional keyword arguments for the waveform model -> minimum_frequency, maximum_frequency.
-    
+        **waveform_kwargs: additional keyword arguments for the waveform model 
+                            -> minimum_frequency, 
+                            -> maximum_frequency,
+                            -> reference_frequency (frequency at which the phase is defined. Defaults to the first element of frequency_array), 
+                            -> lal_tf2_base (boolean, if True, uses the base TaylorF2 implementation in LAL 
+                                            with the TH phase added in as an extra phase contribution. 
+                                            if False, uses the custom implementation of TaylorF2 with TH in this module)
+                            NOTE: If lal_tf2_base is True, the additional waveform_kwargs from bilby.gw.source.lal_binary_black_hole model
+                            can be used to control the base TaylorF2 waveform:
     Returns:
         dict: dictionary containing the waveform data
     """
@@ -145,21 +155,61 @@ def binary_compact_object(
 
     # ---- Evaluate waveform only inside band ----
     freqs = frequency_array[mask]
+    
+    lal_tf2_base = kwargs.pop("lal_tf2_base", False)
+    
+    if lal_tf2_base is False:
+        reference_frequency = kwargs.get("reference_frequency", minimum_frequency)
+        waveform_kwargs = dict(reference_frequency=reference_frequency)
+        hp, hc = generate_binary_compact_object_waveform(
+                                frequency_array=freqs,
+                                mass_1=mass_1,
+                                mass_2=mass_2,
+                                chi_1=chi_1,
+                                chi_2=chi_2,
+                                luminosity_distance=luminosity_distance,
+                                theta_jn=theta_jn,
+                                phase=phase,
+                                dH=dH,
+                                **waveform_kwargs,)
+         # ---- Insert into full arrays ----
+        h_plus[mask] = hp
+        h_cross[mask] = hc
+    else:
+        waveform_kwargs = dict(
+            reference_frequency=minimum_frequency,
+            catch_waveform_errors=False, pn_spin_order=-1, pn_tidal_order=-1,
+            pn_phase_order=-1, pn_amplitude_order=0)
+        waveform_kwargs.update(kwargs)
+        fixed_dict = dict(waveform_approximant='TaylorF2', 
+                        minimum_frequency=freqs[0], maximum_frequency=freqs[-1])
+        waveform_kwargs.update(fixed_dict)
 
-    hp_band, hc_band = generate_binary_compact_object_waveform(
-                            frequency_array=freqs,
-                            mass_1=mass_1,
-                            mass_2=mass_2,
-                            chi_1=chi_1,
-                            chi_2=chi_2,
-                            luminosity_distance=luminosity_distance,
-                            theta_jn=theta_jn,
-                            dH=dH,
-                            )
+        strain_dict = _base_lal_cbc_fd_waveform(
+                                frequency_array=frequency_array,
+                                mass_1=mass_1,
+                                mass_2=mass_2,
+                                a_1=chi_1,
+                                a_2=chi_2,
+                                luminosity_distance=luminosity_distance,
+                                theta_jn=theta_jn, 
+                                phase=phase,
+                                **waveform_kwargs,
+                                )
+        # Implement the tidal heating contribution to the phase ---------------
 
-    # ---- Insert into full arrays ----
-    h_plus[mask] = hp_band
-    h_cross[mask] = hc_band
+        delta_psi = (1. + dH) * psiTH_new(freqs,mass_1,mass_2,chi_1,chi_2)
+        
+        hp = strain_dict["plus"][mask]
+        hc = strain_dict["cross"][mask]
+        
+        hp *= np.exp(-1j*delta_psi)
+        hc *= np.exp(-1j*delta_psi) 
+        
+        # ---- Insert into full arrays ----
+        h_plus[mask] = hp
+        h_cross[mask] = hc
+   
 
     return {"plus": h_plus, "cross": h_cross}
 
@@ -170,9 +220,10 @@ def binary_compact_object(
 def generate_binary_compact_object_waveform(frequency_array,
                         mass_1=10., mass_2=10., 
                         chi_1=0., chi_2=0., 
-                        luminosity_distance=200., theta_jn=0.,
+                        luminosity_distance=200., 
+                        theta_jn=0., phase=0.,
                         dH=0.,
-                        ):
+                        **kwargs,):
     """_summary_
 
     Args:
@@ -188,6 +239,9 @@ def generate_binary_compact_object_waveform(frequency_array,
         dH (float): Tidal heating parameter [H = (1 + dH)]
                     (0 for black holes, -1 for neutron stars/perfectly reflecting compact objects)
                     Defaults to 0.
+        **kwargs: Additional keyword arguments for the waveform generation.
+                    -> reference_frequency: Frequency at which the phase is defined. 
+                                            Defaults to the first element of frequency_array.
     Returns:
         array_like, array_like: array of plus and cross polarisation strain modes 
                                 evaluated at the input frequency array
@@ -289,14 +343,24 @@ def generate_binary_compact_object_waveform(frequency_array,
             + (-1492917260735./134120448. + 2255.*PI**2/6.)*eta + 45293335.*eta**2/127008. + 10323755.*eta**3/199584.)*PI
 
     #-----------------------------------------------------------------------------------------------------
-    phase = (3./(128.*v**5*eta))*(p0 + v*p1 + v**2*p2 + v**3*p3+ v**4*p4 + v**5*(p5+p5L) + v**6*(p6+p6L) + v**7*p7 + v**8*p8L + v**9*p9)
+    psi = (3./(128.*v**5*eta))*(p0 + v*p1 + v**2*p2 + v**3*p3+ v**4*p4 + v**5*(p5+p5L) + v**6*(p6+p6L) + v**7*p7 + v**8*p8L + v**9*p9)
     #-----------------------------------------------------------------------------------------------------
     # Add tidal heating contribution to the phase
-    phase += (1. + dH) * psiTH_new(frequency_array,mass_1,mass_2,chi_1,chi_2)
-    #-----------------------------------------------------------------------------------------------------   
-    
-    hp = 0.5*(1+(cos(theta_jn))**2)*amp*(cos(phase) - 1j*sin(phase))
-    hc = -1j*cos(theta_jn)*amp*(cos(phase) - 1j*sin(phase))
+    delta_psi = (1. + dH) * psiTH_new(frequency_array,mass_1,mass_2,chi_1,chi_2)
+    psi += delta_psi
+    #-----------------------------------------------------------------------------------------------------
+    # Set the overall phase by setting psi = phase at the reference frequency
+    reference_freq = kwargs.get("reference_frequency", frequency_array[0])
+    psi_ref=0.
+    for i in range(len(frequency_array)):
+        if frequency_array[i] >= reference_freq:
+            psi_ref = psi[i]
+            break   
+    phase_diff = phase - psi_ref
+    psi += phase_diff
+
+    hp = 0.5*(1+(cos(theta_jn))**2)*amp*(cos(psi) - 1j*sin(psi))
+    hc = -1j*cos(theta_jn)*amp*(cos(psi) - 1j*sin(psi))
 
     return hp, hc
     
