@@ -65,7 +65,7 @@ Local installation
 
    ``pip install "contourpy<1.2"``
 
-3. Clone the repo: 
+3. Clone the repo (let's say in the home directory): 
    
    via https (works without ssh keys)
 
@@ -77,7 +77,7 @@ Local installation
 
 4. Enter and switch to the tidalheating branch:
 
-   ``cd bilby``
+   ``cd ~/bilby``
 
    ``git switch tidalheating``
 
@@ -96,6 +96,12 @@ Local installation
    ``pip install .``
 
    Each of these options has its pros and cons, and the user should make the choice considering their use case.
+
+7. Test the installation:
+
+   ``cd ~/bilby/examples/gw_examples/injection_examples``
+
+   ``python htf2_check.py``
 
 
 Installation in LDG clusters
