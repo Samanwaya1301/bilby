@@ -87,7 +87,7 @@ Local installation
 
    ``pip install -r gw_requirements.txt``
 
-6. If you go for an editable install of bilby, you won't have to install the package evry time you make any change in the source repo. The package will be loaded directly from the source. For this, run:
+6. With an "editable install" of bilby, you won't have to install the package every time you make any change in the source repo. The package will be loaded directly from the source. For this, run:
 
    ``pip install -e .``
 
