@@ -98,7 +98,7 @@ Local installation
    Each of these options has its pros and cons, and the user should make the choice considering their use case.
 
 
-Installation in clusters
+Installation in LDG clusters
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
 For a cluster installation, *editable install is not recommended* as running jobs may take several days and the results may be inconsistent if the source code is changed during that period.
