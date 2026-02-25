@@ -1,6 +1,7 @@
 import numpy as np
 from scipy.special import psi as digamma
 import lal
+import lalsimulation as lalsim
 
 from .source import _base_lal_cbc_fd_waveform
 
@@ -55,7 +56,7 @@ def psiTH_new(f,mass_1,mass_2,chi_1,chi_2):
 #-------------- ISCO for KBH -------------- (arXiv: 2108.05861)
 
 
-def f_isco_Msolar_KBH(mass_1,mass_2,chi_1,chi_2):
+def f_isco_KBH(mass_1,mass_2,chi_1,chi_2):
     
     def r_hat_isco(chi):
         z1 = 1 + (1 - chi**2)**(1./3.)*((1 + chi)**(1./3.) + (1 - chi)**(1./3.))
@@ -92,6 +93,18 @@ def f_isco_Msolar_KBH(mass_1,mass_2,chi_1,chi_2):
     
     return omega_hat_isco/(np.pi*M_f)
 
+def f_meco(mass_1, mass_2, chi_1, chi_2):
+    """
+    GW frequency at the  minimum energy circular orbit (MECO) of a compact binary
+    """
+    eta = mass_1 * mass_2 / (mass_1 + mass_2) ** 2
+
+    if chi_1 == 0 and chi_2 == 0:
+        f_lso = 1 / (6 ** 1.5 * np.pi * (mass_1 + mass_2) * lal.MTSUN_SI)
+    else:
+        f_lso = lalsim.SimIMRPhenomXfMECO(eta, chi_1, chi_2) / ((mass_1 + mass_2) * lal.MTSUN_SI)
+    return f_lso 
+
 
 # ## Source model for bnary compact objects with arbitrary tidal heating 
 # ####################################################################################
@@ -123,7 +136,10 @@ def binary_compact_object(
         **waveform_kwargs: additional keyword arguments for the waveform model 
                             -> minimum_frequency, 
                             -> maximum_frequency,
-                            -> reference_frequency (frequency at which the phase is defined. Defaults to the first element of frequency_array), 
+                            -> reference_frequency (frequency at which the phase is defined. 
+                                                    Defaults to the first element of frequency_array),
+                            -> isco_or_meco (string, either "isco" or "meco" to determine the maximum frequency cutoff 
+                                            based on either the ISCO or MECO frequency), 
                             -> lal_tf2_base (boolean, if True, uses the base TaylorF2 implementation in LAL 
                                             with the TH phase added in as an extra phase contribution. 
                                             if False, uses the custom implementation of TaylorF2 with TH in this module)
@@ -134,12 +150,17 @@ def binary_compact_object(
     """
     # ---- Determine frequency bounds ----
     minimum_frequency = kwargs.get("minimum_frequency", 20.0)
+    
+    isco_or_meco = kwargs.get("isco_or_meco", "isco")
+    if isco_or_meco == "meco":
+        f_high_cutoff = f_meco(mass_1, mass_2, chi_1, chi_2)
+    elif isco_or_meco == "isco":
+        f_high_cutoff = f_isco_KBH(mass_1, mass_2, chi_1, chi_2)
+    else:
+        raise ValueError("Invalid value for isco_or_meco. Must be either 'isco' or 'meco'.")
 
-    maximum_frequency = min(
-                            f_isco_Msolar_KBH(mass_1, mass_2, chi_1, chi_2),
-                            kwargs.get("maximum_frequency", np.inf),
-                            )
-
+    maximum_frequency = min(f_high_cutoff, kwargs.get("maximum_frequency", np.inf))
+    
     mask = (
             (frequency_array >= minimum_frequency) &
             (frequency_array <= maximum_frequency)
@@ -182,7 +203,7 @@ def binary_compact_object(
             pn_phase_order=-1, pn_amplitude_order=0)
         waveform_kwargs.update(kwargs)
         fixed_dict = dict(waveform_approximant='TaylorF2', 
-                        minimum_frequency=freqs[0], maximum_frequency=freqs[-1])
+                        minimum_frequency=minimum_frequency, maximum_frequency=maximum_frequency)
         waveform_kwargs.update(fixed_dict)
 
         strain_dict = _base_lal_cbc_fd_waveform(
