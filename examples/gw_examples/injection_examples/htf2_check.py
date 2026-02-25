@@ -9,14 +9,13 @@ between luminosity distances of 100Mpc and 5Gpc, the cosmology is Planck15.
 """
 
 import bilby
+import os
 
 # Set the duration and sampling frequency of the data segment that we're
 # going to inject the signal into
 duration = 4.0
 sampling_frequency = 2048.0
 minimum_frequency = 20.
-
-import os
 
 def get_unique_dir(path):
     if not os.path.exists(path):
@@ -34,7 +33,8 @@ def get_unique_dir(path):
 
 # Specify the output directory and the name of the simulation.
 base_dir = os.path.expanduser("~/bilby_tidal_codes/outdir_htf2_check")
-outdir = os.path.expanduser(get_unique_dir(base_dir))
+outdir = get_unique_dir(base_dir)
+os.makedirs(outdir, exist_ok=True)
 
 label = "fast_tutorial"
 bilby.core.utils.setup_logger(outdir=outdir, label=label, log_level="DEBUG")
