@@ -33,7 +33,9 @@ def get_unique_dir(path):
 
 
 # Specify the output directory and the name of the simulation.
-outdir = get_unique_dir("/home/samanwaya/bilby_tidal_codes/outdir_htf2_check")
+base_dir = os.path.expanduser("~/bilby_tidal_codes/outdir_htf2_check")
+outdir = os.path.expanduser(get_unique_dir(base_dir))
+
 label = "fast_tutorial"
 bilby.core.utils.setup_logger(outdir=outdir, label=label, log_level="DEBUG")
 
