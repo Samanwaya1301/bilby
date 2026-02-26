@@ -73,7 +73,7 @@ waveform_arguments = dict(
 waveform_generator = bilby.gw.waveform_generator.WaveformGenerator(
     duration=duration,
     sampling_frequency=sampling_frequency,
-    frequency_domain_source_model=bilby.gw.source_tidalheating.binary_compact_object,
+    frequency_domain_source_model=bilby.gw.source_tidalheating.binary_compact_object_lal_pp_base,
     parameter_conversion=bilby.gw.conversion.convert_to_binary_compact_object_parameters,
     waveform_arguments=waveform_arguments,
 )
